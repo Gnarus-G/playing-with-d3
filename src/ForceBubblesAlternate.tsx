@@ -1,6 +1,6 @@
 import cuid from "cuid";
 import * as d3 from "d3";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useReducer, useRef, useState } from "react";
 
 let index = 0;
 
@@ -22,17 +22,9 @@ export default function ForceBubblesAlternate({
   width: number;
   height: number;
 }) {
-  const [nodes, setNodes] = useState(fetchNodes);
-
   const ref = useRef<HTMLDivElement | null>(null);
-
-  const ticked = useCallback(() => {
-    d3.select(ref.current)
-      .select("svg > g#nodes")
-      .selectAll(".node")
-      .data(nodes)
-      .call((s) => s.attr("x", (d) => d?.x ?? 0).attr("y", (d) => d?.y ?? 0));
-  }, [nodes]);
+  const forceUpdate = useReducer((c) => c + 1, 0)[1];
+  const [nodes, setNodes] = useState(fetchNodes);
 
   const force = useMemo(() => {
     return d3
@@ -40,8 +32,8 @@ export default function ForceBubblesAlternate({
       .force("charge", d3.forceManyBody().strength(1))
       .force("center", d3.forceCenter(width / 2, height / 2).strength(0.05))
       .force("collision", d3.forceCollide().radius(RADIUS))
-      .on("tick", ticked);
-  }, [nodes, ticked]);
+      .on("tick", forceUpdate);
+  }, [nodes, forceUpdate]);
 
   useEffect(() => {
     force.alpha(1).restart();
@@ -93,6 +85,8 @@ function Node({
       height={RADIUS}
       className="node"
       ref={ref}
+      x={data.x}
+      y={data.y}
     >
       <div
         style={{
