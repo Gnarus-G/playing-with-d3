@@ -1,17 +1,6 @@
-import cuid from "cuid";
 import * as d3 from "d3";
-import { useEffect, useMemo, useReducer, useRef, useState } from "react";
-
-let index = 0;
-
-function fetchNodes(n = 5) {
-  return d3.range(n).map(() => ({
-    id: cuid(),
-    i: index++,
-    x: 0,
-    y: 0,
-  }));
-}
+import { useEffect, useMemo, useReducer, useRef } from "react";
+import useNodes from "./useNodes";
 
 const RADIUS = 50;
 
@@ -24,7 +13,7 @@ export default function ForceBubblesAlternate({
 }) {
   const ref = useRef<HTMLDivElement | null>(null);
   const forceUpdate = useReducer((c) => c + 1, 0)[1];
-  const [nodes, setNodes] = useState(fetchNodes);
+  const { nodes, add, remove } = useNodes();
 
   const force = useMemo(() => {
     return d3
@@ -44,20 +33,8 @@ export default function ForceBubblesAlternate({
 
   return (
     <div ref={ref}>
-      <button
-        onClick={() => {
-          setNodes((n) => [...n, { id: cuid(), i: index++, x: 0, y: 0 }]);
-        }}
-      >
-        Add
-      </button>
-      <button
-        onClick={() => {
-          setNodes((n) => (n.splice(0, 1), n.slice()));
-        }}
-      >
-        Remove
-      </button>
+      <button onClick={add}>Add</button>
+      <button onClick={remove}>Remove</button>
       <svg width={width} height={height}>
         <g id="nodes">
           {nodes.map((n) => (
@@ -84,12 +61,15 @@ function Node({
       width={RADIUS}
       height={RADIUS}
       className="node"
+      overflow="visible"
       ref={ref}
       x={data.x}
       y={data.y}
     >
       <div
+        title={`node ${data.id} @ (${data.x}, ${data.y})`}
         style={{
+          position: "relative",
           height: "100%",
           borderRadius: "50%",
           backgroundColor: color,
@@ -100,6 +80,21 @@ function Node({
         }}
       >
         <p>{data.i}</p>
+        <div
+          style={{
+            position: "absolute",
+            borderRadius: "20%",
+            backgroundColor: "grey",
+            padding: 5,
+            marginTop: 5,
+            width: "max-content",
+            top: "80%",
+            right: "-100%",
+            fontSize: 10,
+          }}
+        >
+          {data.x.toFixed(0)}, {data.y.toFixed(0)}
+        </div>
       </div>
     </foreignObject>
   );

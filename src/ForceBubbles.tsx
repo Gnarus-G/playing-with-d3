@@ -1,17 +1,6 @@
-import cuid from "cuid";
 import * as d3 from "d3";
-import { useEffect, useMemo, useRef, useState } from "react";
-
-let index = 0;
-
-function fetchNodes(n = 5) {
-  return d3.range(n).map(() => ({
-    id: cuid(),
-    i: index++,
-    x: 0,
-    y: 0,
-  }));
-}
+import { useEffect, useMemo, useRef } from "react";
+import { useNodesWithResettingOperations } from "./useNodes";
 
 const RADIUS = 50;
 
@@ -22,7 +11,7 @@ export default function ForceBubbles({
   width: number;
   height: number;
 }) {
-  const [nodes, setNodes] = useState(fetchNodes);
+  const { nodes, add, remove } = useNodesWithResettingOperations();
 
   const ref = useRef<HTMLDivElement | null>(null);
 
@@ -56,20 +45,8 @@ export default function ForceBubbles({
 
   return (
     <div ref={ref}>
-      <button
-        onClick={() => {
-          setNodes((n) => fetchNodes(n.length + 1));
-        }}
-      >
-        Add
-      </button>
-      <button
-        onClick={() => {
-          setNodes((n) => fetchNodes(n.length - 1));
-        }}
-      >
-        Remove
-      </button>
+      <button onClick={add}>Add</button>
+      <button onClick={remove}>Remove</button>
       <svg width={width} height={height}>
         <g id="nodes">
           {nodes.map((n) => (
